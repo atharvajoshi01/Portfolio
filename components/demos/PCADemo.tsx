@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Scatter } from 'lucide-react'
+import { Activity } from 'lucide-react'
 
 export default function PCADemo() {
   const [data, setData] = useState<any[]>([])
@@ -65,7 +65,7 @@ export default function PCADemo() {
       <div className="bg-neutral-50 rounded-lg p-6 border border-neutral-200">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-semibold flex items-center gap-2">
-            <Scatter size={20} className="text-accent" />
+            <Activity size={20} className="text-accent" />
             2D PCA Projection (n=250 patients)
           </h3>
           <div className="flex items-center gap-4 text-sm">
