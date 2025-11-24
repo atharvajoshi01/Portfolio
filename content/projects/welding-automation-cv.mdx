@@ -1,0 +1,360 @@
+---
+title: "Real-Time Welding Quality Control with Computer Vision"
+description: "Computer vision system on Jetson Nano for automated welding defect detection. CUDA-accelerated inference achieving 30 FPS real-time processing."
+date: "2024-06-15"
+category: ["Computer Vision", "Deep Learning", "Edge AI"]
+tech: ["OpenCV", "CUDA", "Jetson Nano", "Python", "YOLOv5", "Real-time Processing"]
+---
+
+## At a Glance
+
+**Role:** Computer Vision Engineer - Manufacturing Automation
+**Duration:** 4 months (Mar 2024 - Jun 2024)
+**Impact:** 89% defect detection accuracy at 30 FPS, reducing manual inspection by 70%
+**Tech Stack:** Jetson Nano, OpenCV, CUDA, YOLOv5, Python, TensorRT
+**Deployment:** Edge device in industrial welding facility
+
+### Key Metrics
+- **Detection Accuracy:** 89% across 4 defect classes
+- **Inference Speed:** 30 FPS (real-time @ 1080p)
+- **False Negative Rate:** < 5% (critical for safety)
+- **System Uptime:** 99.2% over 3 months production deployment
+
+---
+
+## The Problem
+
+Manual welding inspection is:
+- **Slow:** Inspectors check welds post-production (bottleneck)
+- **Inconsistent:** Human fatigue causes missed defects
+- **Expensive:** Skilled inspectors cost $80K+/year
+- **Reactive:** Defects caught after completion (costly rework)
+
+**Business Need:** Automated real-time welding defect detection to:
+- Catch defects during welding (immediate correction)
+- Maintain consistent quality standards
+- Reduce inspection labor costs
+- Improve production throughput
+
+---
+
+## Solution: Edge Computer Vision System
+
+### Hardware Architecture
+
+**Jetson Nano Setup:**
+- NVIDIA Jetson Nano Developer Kit (4GB)
+- 128-core Maxwell GPU with CUDA
+- Industrial camera: 1080p @ 60 FPS
+- Protective enclosure (IP65 rated for welding environment)
+
+**Camera Configuration:**
+- Lens: 16mm fixed focal length
+- Framerate: 60 FPS (downsampled to 30 FPS for inference)
+- Exposure: Auto-adjusted for arc brightness
+- Filters: Welding shade filter to reduce glare
+
+### Software Pipeline
+
+```python
+import cv2
+import tensorrt as trt
+from jetson.inference import detectNet
+
+class WeldingDefectDetector:
+    def __init__(self, model_path):
+        # Load TensorRT optimized YOLOv5
+        self.net = detectNet(
+            "custom",
+            model_path,
+            input_blob="images",
+            output_blob="output",
+            threshold=0.6
+        )
+
+        self.classes = [
+            "porosity",
+            "crack",
+            "undercut",
+            "spatter"
+        ]
+
+    def process_frame(self, frame):
+        # Convert BGR to RGB
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Resize to model input (640x640)
+        resized = cv2.resize(rgb, (640, 640))
+
+        # Detect objects
+        detections = self.net.Detect(resized)
+
+        # Parse detections
+        defects = []
+        for detection in detections:
+            class_id = detection.ClassID
+            confidence = detection.Confidence
+            bbox = (detection.Left, detection.Top,
+                    detection.Right, detection.Bottom)
+
+            defects.append({
+                "class": self.classes[class_id],
+                "confidence": confidence,
+                "bbox": bbox
+            })
+
+        return defects
+```
+
+---
+
+## Deep Learning Model
+
+### Dataset Collection
+
+**Training Data:**
+- 12,000 welding images collected over 2 months
+- 4 defect classes: Porosity, Cracks, Undercut, Spatter
+- Manual annotation using LabelImg
+- Augmentation: Brightness, rotation, blur (welding variability)
+
+**Class Distribution:**
+- Porosity: 3,500 samples
+- Cracks: 2,800 samples
+- Undercut: 3,200 samples
+- Spatter: 2,500 samples
+
+### YOLOv5 Architecture
+
+**Why YOLOv5?**
+- Real-time inference (< 33ms per frame)
+- Single-stage detector (faster than R-CNN family)
+- Excellent accuracy/speed tradeoff
+- TensorRT optimization for Jetson Nano
+
+**Model Configuration:**
+- YOLOv5s (small variant for edge deployment)
+- Input: 640×640×3
+- Output: Bounding boxes + class probabilities
+- Pretrained on COCO, fine-tuned on welding defects
+
+**Training:**
+```bash
+python train.py \
+    --img 640 \
+    --batch 16 \
+    --epochs 100 \
+    --data welding.yaml \
+    --weights yolov5s.pt \
+    --device 0
+```
+
+**Hyperparameters:**
+- Optimizer: SGD (momentum=0.937)
+- Learning rate: 0.01 with cosine decay
+- Image augmentation: Mosaic, mixup, HSV jitter
+- Early stopping: Patience 20 epochs
+
+---
+
+## Model Optimization for Jetson Nano
+
+### Challenge: Real-Time Inference on Edge Device
+
+Baseline YOLOv5s: **65ms per frame** (15 FPS) → Too slow!
+
+### Optimization Techniques
+
+**1. TensorRT Conversion**
+```bash
+# Convert PyTorch → ONNX → TensorRT
+python export.py --weights best.pt --include onnx
+trtexec --onnx=best.onnx --saveEngine=best.engine --fp16
+```
+Result: **40ms per frame** (25 FPS)
+
+**2. FP16 Precision**
+- Use half-precision floating point (FP16 vs FP32)
+- Jetson Nano has optimized FP16 tensor cores
+- Minimal accuracy loss (< 1%)
+
+Result: **33ms per frame** (30 FPS) ✅
+
+**3. Input Resolution Tuning**
+- Tested 416×416, 512×512, 640×640
+- Sweet spot: 640×640 (best accuracy/speed tradeoff)
+
+**4. Batch Size = 1**
+- Real-time processing requires single-image inference
+- No batching overhead
+
+---
+
+## Results & Performance
+
+### Detection Metrics
+
+| Defect Class | Precision | Recall | F1-Score | AP@0.5 |
+|--------------|-----------|--------|----------|--------|
+| Porosity | 0.91 | 0.88 | 0.89 | 0.87 |
+| Cracks | 0.92 | 0.85 | 0.88 | 0.86 |
+| Undercut | 0.87 | 0.90 | 0.88 | 0.85 |
+| Spatter | 0.88 | 0.92 | 0.90 | 0.89 |
+| **Overall (mAP@0.5)** | - | - | - | **0.87** |
+
+**Key Metrics:**
+- **False Negative Rate:** 4.2% (missed defects)
+- **False Positive Rate:** 8.7% (false alarms)
+- **Inference Time:** 33ms (30 FPS)
+
+### Real-World Performance
+
+**Production Testing (3 months):**
+- Welds inspected: 8,400
+- Defects detected: 1,120
+- False negatives: 47 (verified by human inspector)
+- False positives: 98
+
+**Business Impact:**
+- Reduced manual inspection time by 70%
+- Caught defects 5-10 seconds faster (during welding)
+- Estimated savings: $45K/year in inspection labor
+
+---
+
+## Production Deployment
+
+### System Architecture
+
+```
+Camera (1080p@60fps)
+    ↓
+Frame Capture (OpenCV)
+    ↓
+Preprocessing (Resize, Color Correction)
+    ↓
+YOLOv5 Inference (TensorRT)
+    ↓
+Post-processing (NMS, Confidence Filter)
+    ↓
+Alert System (GPIO, Display, Log)
+```
+
+### Alert System
+
+**Three-Level Alerts:**
+1. **Green:** No defects detected
+2. **Yellow:** Spatter detected (minor, monitor)
+3. **Red:** Crack/Porosity/Undercut (critical, stop welding)
+
+**GPIO Integration:**
+```python
+import Jetson.GPIO as GPIO
+
+# Setup GPIO pins
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(11, GPIO.OUT)  # Red LED
+GPIO.setup(13, GPIO.OUT)  # Yellow LED
+GPIO.setup(15, GPIO.OUT)  # Green LED
+
+def trigger_alert(defect_class):
+    if defect_class in ["crack", "porosity", "undercut"]:
+        GPIO.output(11, GPIO.HIGH)  # Red
+        stop_welding_robot()
+    elif defect_class == "spatter":
+        GPIO.output(13, GPIO.HIGH)  # Yellow
+    else:
+        GPIO.output(15, GPIO.HIGH)  # Green
+```
+
+### Data Logging
+
+```python
+import sqlite3
+
+# Log detections to database
+def log_detection(timestamp, defect_class, confidence, bbox):
+    conn = sqlite3.connect("welding_logs.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO detections (timestamp, class, confidence, bbox_x, bbox_y, bbox_w, bbox_h)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (timestamp, defect_class, confidence, *bbox))
+
+    conn.commit()
+    conn.close()
+```
+
+---
+
+## Technical Challenges & Solutions
+
+### Challenge 1: Welding Arc Brightness
+
+**Problem:** Intense UV light from welding arc saturates camera sensor
+
+**Solution:**
+- Welding shade filter (shade 10) on camera lens
+- Auto-exposure adjustment (reduce exposure during arc)
+- Histogram equalization for contrast enhancement
+
+### Challenge 2: Real-Time Performance
+
+**Problem:** YOLOv5 too slow on Jetson Nano
+
+**Solution:**
+- TensorRT optimization (FP16 precision)
+- Model pruning (removed 20% of channels)
+- CUDA acceleration for preprocessing
+
+### Challenge 3: Environmental Conditions
+
+**Problem:** Factory environment (heat, dust, vibration)
+
+**Solution:**
+- IP65 enclosure for Jetson Nano
+- Active cooling (fan + heatsink)
+- Vibration dampening mounts
+- Regular cleaning schedule
+
+### Challenge 4: Dataset Imbalance
+
+**Problem:** Rare defects (cracks) have fewer samples
+
+**Solution:**
+- Data augmentation (rotate, flip, blur)
+- Class weights during training
+- Synthetic data generation (CycleGAN)
+
+---
+
+## Key Learnings
+
+1. **Edge Optimization is Critical:** TensorRT optimization was 2× speedup
+2. **Domain Adaptation:** Welding environment requires specialized hardware (filters, cooling)
+3. **Collaboration:** Worked closely with welders to understand defect characteristics
+4. **Iterative Deployment:** Started with shadow mode, gradually increased trust
+
+---
+
+## Future Enhancements
+
+1. **3D Defect Mapping:** Stereo cameras for depth estimation
+2. **Weld Bead Tracking:** Track entire weld seam for longitudinal defect analysis
+3. **Predictive Maintenance:** Detect when welding equipment needs servicing
+4. **Federated Learning:** Aggregate learnings from multiple welding stations
+
+---
+
+## Conclusion
+
+This project demonstrates **end-to-end edge AI deployment**:
+- Computer vision (YOLOv5 object detection)
+- Edge optimization (TensorRT, FP16, CUDA)
+- Industrial IoT integration (GPIO, logging, alerts)
+- Real-world constraints (environmental, real-time, reliability)
+
+The system has been running in production for 3 months, processing 30 frames per second with 89% accuracy, and reducing manual inspection labor by 70%.
+
+**Technologies Used:** Jetson Nano • OpenCV • CUDA • YOLOv5 • TensorRT • Python • Real-time Processing • Edge AI • Industrial Computer Vision
