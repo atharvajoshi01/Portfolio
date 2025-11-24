@@ -3,29 +3,29 @@
 import { motion } from 'framer-motion'
 import Section from '@/components/ui/Section'
 import Card from '@/components/ui/Card'
-import { Award, Briefcase, GraduationCap, Code, Trophy } from 'lucide-react'
+import { Award, Briefcase, Code, Trophy } from 'lucide-react'
 
 const timeline = [
   {
-    year: '2024 - Present',
+    year: 'Aug 2025 - Present',
     title: 'ML Engineer - Vibration Analytics',
     company: 'MMS LLC',
     description:
-      'Built production vibration fault classification system achieving 94% accuracy. Deployed real-time CNN-based predictive maintenance solution reducing downtime by 35%.',
+      'Built production vibration fault classification system using MiniRocket + RidgeClassifier achieving 99.98% accuracy. Deployed real-time predictive maintenance solution processing vibration signals with FFT analysis.',
   },
   {
-    year: '2024',
+    year: 'Oct 2025 - Present',
     title: 'Data Scientist - Biostatistics Research',
     company: 'University at Buffalo',
     description:
       'Conducted PCA analysis on GDM metabolomics data (156 features, 250 patients). Identified 12 biomarkers with p < 0.001 significance. Manuscript submitted to JCEM.',
   },
   {
-    year: '2023 - 2024',
-    title: 'Data Engineer - Smart City Analytics',
-    company: 'City Traffic Management',
+    year: 'Feb 2023 - Feb 2024',
+    title: 'ML Engineer',
+    company: 'Various Projects',
     description:
-      'Designed and deployed ETL pipeline processing 1.2M traffic records/month. Implemented anomaly detection achieving 91% precision for incident identification.',
+      'Developed traffic management analytics system and automated welding machine inspection using computer vision. Implemented real-time detection and monitoring solutions.',
   },
 ]
 

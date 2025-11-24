@@ -1,0 +1,169 @@
+---
+title: "Why ML Models Fail in Production (And How to Fix It)"
+description: "Data drift, label delay, and model degradation. Lessons learned from monitoring a fraud detection system in production."
+date: "2025-09-15"
+readTime: 8
+tags: ["MLOps", "Production ML", "Model Monitoring"]
+---
+
+## Introduction
+
+You trained a model with 95% accuracy. It passed all offline tests. But three months after deployment, precision dropped from 0.92 to 0.68. Sound familiar?
+
+This is the reality of production ML. Models that perform excellently in development fail silently in production. Here's what I learned monitoring a fraud detection system that processed 10M+ transactions monthly.
+
+## The Silent Killers
+
+### 1. Data Drift
+
+**What happened:** Our fraud model's precision dropped 25% over 8 weeks.
+
+**Root cause:** Payment processor changed their API, adding a new transaction field and deprecating another. Our feature engineering pipeline silently filled missing values with zeros.
+
+**The fix:**
+```python
+# Monitor feature distributions
+from nannyml import DataReconstructionDriftCalculator
+
+calc = DataReconstructionDriftCalculator(
+    column_names=['amount', 'merchant_category', 'time_since_last_txn'],
+    timestamp_column_name='timestamp'
+)
+
+results = calc.calculate(production_data)
+results.plot()  # Alerts when reconstruction error spikes
+```
+
+**Lesson:** Schema changes ≠ model retraining triggers. Monitor feature distributions, not just accuracy.
+
+### 2. Label Delay
+
+**What happened:** Model performance looked great in real-time dashboards. Actually, it was terrible.
+
+**Root cause:** Fraud labels arrive 7-14 days after transactions (investigation delay). We were measuring precision/recall on unlabeled data.
+
+**The fix:**
+```python
+# Use proxy metrics for real-time monitoring
+metrics = {
+    'prediction_drift': compare_distributions(train_preds, production_preds),
+    'high_confidence_ratio': (proba > 0.9).mean(),
+    'feature_nulls': features.isnull().sum(),
+    'prediction_volume': len(predictions)
+}
+
+# Ground truth validation runs weekly on delayed labels
+```
+
+**Lesson:** Real-time metrics ≠ true performance. Build proxy metrics for immediate feedback, validate with delayed ground truth.
+
+### 3. Model Degradation
+
+**What happened:** AUC-ROC dropped from 0.94 to 0.87 over 6 months despite no data drift.
+
+**Root cause:** Fraudsters adapted. New attack patterns (credential stuffing, account takeover) didn't exist in training data from 12 months ago.
+
+**The fix:**
+```python
+# Segment performance by prediction confidence
+def analyze_performance_segments(y_true, y_pred, y_proba):
+    segments = {
+        'high_conf': y_proba > 0.8,
+        'medium_conf': (y_proba >= 0.5) & (y_proba <= 0.8),
+        'low_conf': y_proba < 0.5
+    }
+
+    for name, mask in segments.items():
+        precision = precision_score(y_true[mask], y_pred[mask])
+        recall = recall_score(y_true[mask], y_pred[mask])
+        print(f"{name}: Precision={precision:.3f}, Recall={recall:.3f}")
+```
+
+**Finding:** High-confidence predictions (>0.8 proba) maintained 0.92 precision. Medium confidence degraded to 0.61. The model wasn't failing uniformly—it was losing confidence.
+
+**Solution:** Retrain monthly with rolling 6-month window + fraud pattern detection system.
+
+## Production Monitoring Stack
+
+### What We Actually Monitor
+
+1. **Data Quality**
+   - Missing value rates per feature
+   - Feature distribution shifts (KL divergence)
+   - Schema validation failures
+
+2. **Model Performance**
+   - Precision/recall by confidence bucket
+   - Prediction distribution drift
+   - Calibration curves (predicted proba vs actual rate)
+
+3. **System Health**
+   - Prediction latency (p50, p99)
+   - Error rates
+   - Throughput
+
+### NannyML for Drift Detection
+
+```python
+from nannyml import PerformanceEstimator
+
+estimator = PerformanceEstimator(
+    model_metadata=metadata,
+    chunk_size=5000,
+    metrics=['roc_auc', 'precision', 'recall']
+)
+
+# Estimates performance without labels using CBPE method
+estimated_performance = estimator.estimate(production_data)
+
+# Alert when estimated AUC drops below threshold
+if estimated_performance['roc_auc'] < 0.85:
+    trigger_retraining_pipeline()
+```
+
+## The Retraining Decision
+
+**Wrong approach:** Retrain on a schedule (weekly, monthly).
+
+**Right approach:** Retrain when performance degrades.
+
+Our triggers:
+1. Estimated precision < 0.75 (NannyML CBPE)
+2. Data drift score > 0.15 (reconstruction error)
+3. High-confidence precision < 0.85 (ground truth validation)
+4. Manual trigger (fraud analyst flags new attack pattern)
+
+## Key Takeaways
+
+1. **Offline metrics lie.** 95% accuracy in dev ≠ 95% in production.
+
+2. **Label delay is real.** Build proxy metrics. Don't wait 2 weeks to know your model failed.
+
+3. **Drift is multidimensional.** Data drift, concept drift, schema drift—monitor all.
+
+4. **Segment performance.** Models fail differently at different confidence levels.
+
+5. **Automate monitoring, not retraining.** Retrain when metrics degrade, not on a calendar.
+
+## Production Checklist
+
+Before deploying your next model:
+
+- [ ] Schema validation in inference pipeline
+- [ ] Feature distribution monitoring
+- [ ] Prediction drift detection
+- [ ] Proxy metrics for immediate feedback
+- [ ] Ground truth validation pipeline (handles label delay)
+- [ ] Performance segmentation by confidence
+- [ ] Automated alerts + retraining triggers
+- [ ] Rollback mechanism for failed deployments
+
+## Resources
+
+- **NannyML:** Open-source ML monitoring [nannyml.com](https://nannyml.com)
+- **Evidently AI:** Drift detection and reporting
+- **Great Expectations:** Data validation framework
+
+---
+
+**Final thought:** Production ML isn't about building the best model. It's about building a system that detects when your model stops being the best—and fixes it automatically.
