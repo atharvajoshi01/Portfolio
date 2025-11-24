@@ -6,43 +6,25 @@ import { Calendar, Clock } from 'lucide-react'
 import Section from '@/components/ui/Section'
 import Card from '@/components/ui/Card'
 
-// Mock blog posts
+// Blog posts
 const posts = [
   {
     slug: 'building-deep-galerkin-pde-solver',
     title: 'Building a Deep Galerkin PDE Solver from Scratch',
     description:
       'Deep dive into physics-informed neural networks for solving partial differential equations in quantitative finance. From theory to production deployment.',
-    date: '2025-01-15',
+    date: '2025-11-15',
     readTime: 12,
     tags: ['Deep Learning', 'Quantitative Finance', 'PyTorch'],
-  },
-  {
-    slug: 'fft-predictive-maintenance',
-    title: 'FFT for Predictive Maintenance: A Practical Guide',
-    description:
-      'How frequency domain analysis revolutionizes industrial equipment monitoring. Transforming vibration signals into actionable insights.',
-    date: '2024-11-28',
-    readTime: 10,
-    tags: ['Signal Processing', 'ML Engineering', 'Industrial IoT'],
   },
   {
     slug: 'why-ml-models-fail-production',
     title: 'Why ML Models Fail in Production (And How to Fix It)',
     description:
       'Data drift, label delay, and model degradation. Lessons learned from monitoring a fraud detection system in production.',
-    date: '2024-09-05',
+    date: '2025-09-15',
     readTime: 8,
     tags: ['MLOps', 'Production ML', 'Model Monitoring'],
-  },
-  {
-    slug: 'real-time-inference-jetson-nano',
-    title: 'Real-Time Computer Vision on Edge Devices',
-    description:
-      'Optimizing YOLOv5 for Jetson Nano: TensorRT, FP16, and achieving 30 FPS for industrial welding inspection.',
-    date: '2024-07-20',
-    readTime: 15,
-    tags: ['Edge AI', 'Computer Vision', 'Optimization'],
   },
 ]
 
