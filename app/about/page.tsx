@@ -44,7 +44,7 @@ const achievements = [
   {
     icon: Trophy,
     title: 'National Chess Player',
-    description: 'Represented state in rapid chess tournaments. Strategic thinking applied to ML problem-solving.',
+    description: 'Represented state in rapid chess tournaments.',
   },
   {
     icon: Award,
@@ -103,7 +103,7 @@ export default function AboutPage() {
               </p>
               <p className="text-neutral-700 leading-relaxed">
                 When I'm not coding, you'll find me playing chess (I'm a national-level rapid chess
-                player), reading research papers, or exploring new ML frameworks and tools.
+                player), reading books, listening to music, playing games, or exploring new ML frameworks and tools.
               </p>
             </div>
           </Card>

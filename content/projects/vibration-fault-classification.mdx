@@ -7,363 +7,56 @@ featured: true
 tech: ["MiniRocket", "RidgeClassifier", "Python", "FFT", "Signal Processing", "Scikit-learn"]
 ---
 
-## At a Glance
+## Project Overview
 
-**Role:** ML Engineer (MMS LLC - Vibration Analytics Team)
+**Role:** ML Engineer - Vibration Analytics
+**Company:** MMS LLC
 **Duration:** August 2025 - Present (Ongoing)
-**Impact:** Production system reducing unplanned downtime by 35%
-**Tech Stack:** MiniRocket, RidgeClassifier, Python, FFT, NumPy, SciPy, Scikit-learn
-**Key Achievement:** 99.98% accuracy classifying fault types from raw vibration data
-
-### Key Metrics
-- **Classification Accuracy:** 99.98% across fault classes
-- **False Positive Rate:** < 3% (critical for industrial deployment)
-- **Inference Time:** 45ms per classification (real-time capable)
-- **Data Volume:** 250,000+ vibration samples from industrial equipment
-- **ROI:** Estimated $500K/year savings from prevented equipment failures
+**Tech Stack:** MiniRocket, RidgeClassifier, Python, FFT, Signal Processing, Scikit-learn
 
 ---
 
-## The Problem
+## The Challenge
 
-Industrial equipment failures cause:
-- **Unplanned Downtime:** Costs $260K per hour in manufacturing
-- **Safety Risks:** Catastrophic failures can injure personnel
-- **Repair Costs:** Emergency repairs 3-5× more expensive than planned maintenance
-
-Traditional vibration analysis relies on:
-1. **Manual Inspection:** Expensive vibration analysts reviewing FFT plots
-2. **Rule-Based Alarms:** Simple threshold alerts with high false positives
-3. **Reactive Maintenance:** Fixing equipment after failure
-
-**Business Need:** Automated system to predict machine faults before failure, enabling proactive maintenance scheduling.
+Industrial equipment failures cause significant downtime and safety risks. Traditional vibration analysis relies on manual inspection and rule-based alarms with high false positives. This project aims to build an automated system for predictive maintenance using machine learning.
 
 ---
 
-## Solution Architecture
+## Solution
 
-### Data Pipeline
+Developed a vibration analytics system that:
 
-**1. Data Collection**
-- Tri-axial accelerometers mounted on bearing housings
-- Sampling rate: 25.6 kHz (Nyquist for 10 kHz monitoring)
-- 1-second windows collected every 10 minutes
-- Sensors: ICP accelerometers with 100 mV/g sensitivity
-
-**2. Preprocessing**
-```python
-def preprocess_vibration(raw_signal, fs=25600):
-    # Remove DC offset
-    signal = raw_signal - np.mean(raw_signal)
-
-    # Band-pass filter (10 Hz - 10 kHz)
-    sos = butter(4, [10, 10000], btype='band', fs=fs, output='sos')
-    filtered = sosfilt(sos, signal)
-
-    # Resample to 12.8 kHz (reduce computation)
-    resampled = resample(filtered, len(filtered) // 2)
-
-    return resampled
-```
-
-**3. Feature Engineering - FFT Transform**
-
-The key innovation: **frequency domain features reveal fault signatures**
-
-```python
-def compute_fft_features(signal, fs=12800):
-    # Compute FFT
-    fft_vals = np.fft.rfft(signal)
-    fft_freq = np.fft.rfftfreq(len(signal), 1/fs)
-    magnitude = np.abs(fft_vals)
-
-    # Extract fault-specific frequency bands
-    features = {
-        'low_freq_rms': rms(magnitude[fft_freq < 100]),      # Unbalance
-        'bearing_freq': magnitude_at_bearing_freq(fft_freq, magnitude),  # Bearing defects
-        'high_freq_rms': rms(magnitude[fft_freq > 5000]),   # Looseness
-        'peak_freq': fft_freq[np.argmax(magnitude)],         # Dominant frequency
-        'spectral_kurtosis': kurtosis(magnitude),            # Transient events
-    }
-    return features
-```
-
-**Fault Signatures in Frequency Domain:**
-- **Unbalance:** Dominant peak at 1× rotation speed (20-50 Hz)
-- **Misalignment:** Peaks at 1×, 2×, 3× rotation speed
-- **Bearing Defects:** High-frequency components (5-10 kHz) with modulation
-- **Looseness:** Broadband noise with high kurtosis
-- **Normal:** Low RMS, no dominant frequencies
+- **Classifies machine faults** from vibration sensor data with 99.98% accuracy
+- Uses **MiniRocket + RidgeClassifier** for time series classification
+- Processes vibration signals with **FFT (Fast Fourier Transform)** for feature extraction
+- Enables **proactive maintenance scheduling** to prevent equipment failures
+- Reduces unplanned downtime and maintenance costs
 
 ---
 
-## Deep Learning Model
+## Key Technologies
 
-### CNN Architecture
-
-**Why CNN for vibration data?**
-- Automatically learns hierarchical frequency patterns
-- Spatial invariance useful for varying rotation speeds
-- Convolutional filters act as learnable frequency detectors
-
-**Model Architecture:**
-```python
-model = Sequential([
-    # Input: (12800,) time-series or (256, 256) spectrogram
-
-    # Convolutional layers
-    Conv1D(64, kernel_size=7, activation='relu', input_shape=(12800, 1)),
-    MaxPooling1D(pool_size=4),
-    Dropout(0.25),
-
-    Conv1D(128, kernel_size=5, activation='relu'),
-    MaxPooling1D(pool_size=4),
-    Dropout(0.25),
-
-    Conv1D(256, kernel_size=3, activation='relu'),
-    GlobalAveragePooling1D(),
-
-    # Dense layers
-    Dense(256, activation='relu'),
-    Dropout(0.5),
-    Dense(128, activation='relu'),
-
-    # Output: 5 fault classes
-    Dense(5, activation='softmax')
-])
-```
-
-**Total Parameters:** 1.2M
-**Training Data:** 200,000 samples (40K per class, balanced)
-**Validation Split:** 20%
-**Test Set:** 50,000 samples from different machines (generalization test)
-
-### Training Strategy
-
-**Data Augmentation:**
-```python
-def augment_signal(signal):
-    # Time shifting
-    shift = np.random.randint(-100, 100)
-    signal = np.roll(signal, shift)
-
-    # Amplitude scaling (±10%)
-    scale = np.random.uniform(0.9, 1.1)
-    signal = signal * scale
-
-    # Add Gaussian noise (SNR = 40 dB)
-    noise = np.random.normal(0, 0.01, len(signal))
-    signal = signal + noise
-
-    return signal
-```
-
-**Optimization:**
-- Optimizer: Adam (lr=1e-4)
-- Loss: Categorical crossentropy with label smoothing (α=0.1)
-- Batch size: 64
-- Epochs: 100 with early stopping (patience=10)
-- LR schedule: ReduceLROnPlateau (factor=0.5, patience=5)
-
-**Class Balancing:**
-- Class weights computed as inverse frequency
-- SMOTE oversampling for rare fault types
-- Ensures model doesn't bias toward common faults
+- **MiniRocket:** State-of-the-art time series classification algorithm
+- **RidgeClassifier:** Fast, efficient linear classifier for high-dimensional features
+- **FFT Analysis:** Frequency domain transformation for fault signature detection
+- **Signal Processing:** Python libraries (NumPy, SciPy) for data preprocessing
+- **Scikit-learn:** ML pipeline and model development
 
 ---
 
-## Results & Performance
+## Impact
 
-### Classification Metrics
-
-| Fault Class | Precision | Recall | F1-Score | Support |
-|------------|-----------|--------|----------|---------|
-| Normal | 0.97 | 0.96 | 0.96 | 10,000 |
-| Unbalance | 0.94 | 0.95 | 0.94 | 10,000 |
-| Misalignment | 0.92 | 0.91 | 0.91 | 10,000 |
-| Bearing Fault | 0.95 | 0.96 | 0.95 | 10,000 |
-| Looseness | 0.91 | 0.92 | 0.91 | 10,000 |
-| **Overall** | **0.94** | **0.94** | **0.94** | **50,000** |
-
-**Confusion Matrix Insights:**
-- Highest confusion: Misalignment vs Unbalance (similar frequency signatures)
-- Bearing faults most distinguishable (unique high-freq signature)
-- False positive rate < 3% (critical for avoiding unnecessary maintenance)
-
-### Feature Importance Analysis
-
-Using SHAP (SHapley Additive exPlanations):
-
-```python
-import shap
-
-# Explain model predictions
-explainer = shap.DeepExplainer(model, X_train[:1000])
-shap_values = explainer.shap_values(X_test[:100])
-
-# Visualize
-shap.summary_plot(shap_values, X_test[:100])
-```
-
-**Top Predictive Features:**
-1. High-frequency RMS (5-10 kHz): Bearing faults
-2. Peak frequency location: Unbalance/misalignment
-3. Spectral kurtosis: Looseness detection
-4. Harmonic ratios: Misalignment signature
+- **99.98% classification accuracy** across fault types
+- Real-time fault detection for industrial predictive maintenance
+- Production deployment reducing equipment downtime
+- Scalable ML pipeline for vibration analytics
 
 ---
 
-## Production Deployment
+## Project Status
 
-### Real-Time Inference Pipeline
-
-```python
-class VibrationMonitor:
-    def __init__(self, model_path):
-        self.model = load_model(model_path)
-        self.buffer = RingBuffer(size=25600)  # 1 second at 25.6 kHz
-
-    def process_stream(self, sensor_data):
-        # Accumulate data
-        self.buffer.append(sensor_data)
-
-        if self.buffer.is_full():
-            # Preprocess
-            signal = preprocess_vibration(self.buffer.get())
-
-            # Predict
-            prediction = self.model.predict(signal[np.newaxis, :, np.newaxis])
-            fault_class = np.argmax(prediction)
-            confidence = np.max(prediction)
-
-            # Alert if fault detected
-            if fault_class != NORMAL and confidence > 0.85:
-                send_alert(fault_class, confidence)
-
-            self.buffer.clear()
-```
-
-**System Architecture:**
-- Edge deployment on industrial PCs
-- TensorFlow Lite for optimized inference
-- MQTT for real-time data streaming
-- InfluxDB for time-series storage
-- Grafana dashboards for monitoring
-
-### Alert System
-
-**Three-Tier Alert Strategy:**
-
-1. **Green (Normal):** Confidence > 90% for normal operation
-2. **Yellow (Warning):** Fault detected with 70-85% confidence → Schedule inspection
-3. **Red (Critical):** Fault detected with > 85% confidence → Immediate action
-
-**Alert Payload:**
-```json
-{
-  "timestamp": "2024-11-20T14:32:00Z",
-  "machine_id": "PUMP-A-07",
-  "fault_type": "bearing_fault",
-  "confidence": 0.92,
-  "vibration_rms": 4.5,
-  "dominant_freq_hz": 7200,
-  "recommended_action": "Schedule bearing replacement within 72 hours"
-}
-```
+This project is **currently ongoing**. More details and technical implementation will be shared upon project completion.
 
 ---
 
-## Business Impact
-
-### Quantifiable Results
-
-**Operational Metrics (6 months post-deployment):**
-- **35% reduction** in unplanned downtime
-- **28% decrease** in emergency repair costs
-- **92% prediction lead time:** Average 48 hours warning before failure
-- **3% false positive rate:** Minimal unnecessary inspections
-
-**Financial Impact:**
-- Prevented equipment failures: 12 incidents
-- Avoided downtime cost: $520K (12 incidents × ~$40K avg)
-- System development cost: $120K
-- **ROI:** 433% in first year
-
-**Maintenance Optimization:**
-- Shift from reactive to predictive maintenance
-- Reduced vibration analyst labor by 60%
-- Better spare parts inventory management
-
----
-
-## Technical Challenges & Solutions
-
-### Challenge 1: Varying Operating Conditions
-
-**Problem:** Machine speed varies (1200-3600 RPM) → frequency signatures shift
-
-**Solution:**
-- Order tracking: Normalize frequencies to rotation speed multiples
-- Speed sensor integration for RPM measurement
-- Data augmentation with speed variations during training
-
-### Challenge 2: Limited Labeled Fault Data
-
-**Problem:** Collecting real fault data requires waiting for failures (expensive, dangerous)
-
-**Solution:**
-- Synthetic fault injection during scheduled maintenance
-- Transfer learning from similar equipment types
-- SMOTE oversampling for rare fault classes
-- Active learning: Label most uncertain predictions
-
-### Challenge 3: Sensor Drift & Calibration
-
-**Problem:** Accelerometer sensitivity degrades over time
-
-**Solution:**
-- Periodic sensor calibration (quarterly)
-- Normalization based on known reference signals
-- Drift detection using control charts on baseline vibration
-
-### Challenge 4: Edge Deployment Constraints
-
-**Problem:** Industrial PCs have limited compute (no GPU)
-
-**Solution:**
-- Model quantization (INT8) → 4× speedup, minimal accuracy loss
-- TensorFlow Lite for mobile/edge inference
-- Model pruning: Removed 30% of weights with < 1% accuracy drop
-
----
-
-## Key Learnings
-
-1. **Domain Knowledge is Critical:** FFT preprocessing based on vibration analysis theory outperformed end-to-end deep learning
-2. **False Positives Matter:** In industrial settings, false alarms erode trust → prioritized high precision
-3. **Explainability Builds Trust:** SHAP explanations helped maintenance teams understand and trust predictions
-4. **Edge Constraints Drive Design:** Model compression techniques essential for real-world deployment
-
----
-
-## Future Enhancements
-
-1. **Multi-Sensor Fusion:** Combine vibration, temperature, and current signatures
-2. **Remaining Useful Life (RUL) Prediction:** Regression model to estimate failure timeline
-3. **Anomaly Detection:** Unsupervised learning for novel fault types
-4. **Federated Learning:** Train models across multiple facilities without sharing raw data
-5. **Digital Twin Integration:** Physics-based models + ML for hybrid approach
-
----
-
-## Conclusion
-
-This project demonstrates **end-to-end ML engineering for industrial IoT**:
-- Signal processing expertise (FFT, filtering, feature engineering)
-- Deep learning (CNN architecture, training, optimization)
-- Production deployment (edge inference, real-time streaming, alerting)
-- Business impact (ROI, operational metrics, stakeholder communication)
-
-The system is now deployed across 50+ machines, continuously monitoring for faults and enabling proactive maintenance.
-
-**Technologies Used:** TensorFlow • Python • NumPy • SciPy • Signal Processing • CNN • FFT • MQTT • InfluxDB • Grafana • TensorFlow Lite
+**Note:** This is an active production system. Technical implementation details are being refined as the project progresses.

@@ -22,12 +22,12 @@ const featuredProjects = [
   },
   {
     title: 'Machine Fault Classification',
-    description: 'Real-time vibration analytics system for predictive maintenance. CNN-based fault detection with FFT feature engineering achieving 94% accuracy.',
-    tags: ['CNN', 'FFT', 'Signal Processing', 'MLOps'],
+    description: 'Vibration analytics system for predictive maintenance using MiniRocket + RidgeClassifier. Ongoing project achieving 99.98% accuracy in fault classification.',
+    tags: ['MiniRocket', 'RidgeClassifier', 'Signal Processing', 'MLOps'],
     href: '/projects/vibration-fault-classification',
     metrics: [
-      { label: 'Accuracy', value: '94%' },
-      { label: 'Classes', value: '5 faults' },
+      { label: 'Accuracy', value: '99.98%' },
+      { label: 'Status', value: 'Ongoing' },
       { label: 'Data', value: 'Real-time' },
     ],
   },

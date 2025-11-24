@@ -22,10 +22,10 @@ const projects = [
   {
     slug: 'vibration-fault-classification',
     title: 'Machine Fault Classification',
-    description: 'Real-time vibration analytics for predictive maintenance using CNN with FFT preprocessing. Deployed production system achieving 94% accuracy across 5 fault classes.',
-    date: '2024-11',
-    category: ['Deep Learning', 'MLOps', 'Signal Processing'],
-    tech: ['TensorFlow', 'Python', 'FFT', 'Signal Processing', 'Real-time ML'],
+    description: 'Vibration analytics system for predictive maintenance using MiniRocket + RidgeClassifier. Ongoing project achieving 99.98% accuracy in fault classification.',
+    date: '2025-08',
+    category: ['Machine Learning', 'MLOps', 'Signal Processing'],
+    tech: ['MiniRocket', 'RidgeClassifier', 'Python', 'FFT', 'Scikit-learn'],
     featured: true,
   },
   {
