@@ -2,26 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
 @layer base {
-  :root {
-    --color-primary: #0D0D0D;
-    --color-accent: #3BC9DB;
-    --color-neutral-50: #FAFAFA;
-    --color-neutral-100: #F5F5F5;
-  }
-
-  * {
-    @apply border-neutral-300;
-  }
-
   html {
     @apply scroll-smooth;
   }
 
   body {
-    @apply bg-neutral-50 text-primary antialiased;
+    @apply bg-white text-neutral-900 antialiased;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 
@@ -32,76 +19,90 @@
 
 @layer components {
   .container-custom {
-    @apply max-w-7xl mx-auto px-6 lg:px-8;
+    @apply max-w-5xl mx-auto px-6 lg:px-8;
   }
 
-  .glass-effect {
-    @apply bg-white/70 backdrop-blur-md border border-neutral-200/50;
-  }
-
-  .gradient-text {
-    @apply bg-gradient-to-r from-accent to-accent-dark bg-clip-text text-transparent;
-  }
-
-  .hover-lift {
-    @apply transition-transform duration-300 hover:-translate-y-1;
+  .glass-nav {
+    @apply bg-white/80 backdrop-blur-md;
+    box-shadow: 0 0 20px rgba(170, 213, 228, 0.24);
   }
 
   .section-padding {
     @apply py-20 lg:py-28;
   }
-}
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .animated-grid {
+    background-image:
+      linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridMove 30s linear infinite;
   }
-}
 
-/* Code blocks styling for MDX */
-pre {
-  @apply bg-neutral-900 text-neutral-100 rounded-lg p-6 overflow-x-auto my-6;
-}
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  }
 
-code {
-  @apply bg-neutral-200 text-primary px-1.5 py-0.5 rounded text-sm font-mono;
-}
+  .badge-green {
+    @apply badge bg-emerald-50 text-emerald-700 border border-emerald-200;
+  }
 
-pre code {
-  @apply bg-transparent p-0 text-sm;
-}
+  .badge-neutral {
+    @apply badge bg-neutral-100 text-neutral-600;
+  }
 
-/* MDX content styling */
-.mdx-content {
-  @apply prose prose-neutral max-w-none;
-  @apply prose-headings:font-display prose-headings:font-semibold;
-  @apply prose-p:text-neutral-700 prose-p:leading-relaxed;
-  @apply prose-a:text-accent prose-a:no-underline hover:prose-a:underline;
-  @apply prose-strong:text-primary prose-strong:font-semibold;
-  @apply prose-code:text-accent-dark prose-code:font-mono;
-  @apply prose-pre:bg-neutral-900 prose-pre:text-neutral-100;
-  @apply prose-img:rounded-lg prose-img:shadow-lg;
-}
+  /* Dark card used for projects */
+  .dark-card {
+    @apply rounded-2xl p-6 lg:p-8;
+    background: linear-gradient(135deg, #1A232A 0%, #0E194A 100%);
+    color: white;
+  }
 
-/* Smooth scrollbar */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
+  .dark-card-alt {
+    @apply rounded-2xl p-6 lg:p-8;
+    background: linear-gradient(135deg, #2A324E 0%, #3A2A4E 100%);
+    color: white;
+  }
 
-::-webkit-scrollbar-track {
-  @apply bg-neutral-100;
-}
+  /* Skill category card */
+  .skill-card {
+    @apply rounded-xl p-5 border border-neutral-700/50;
+    background: rgba(255,255,255,0.05);
+  }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-neutral-400 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-neutral-500;
+  /* Lifestyle card */
+  .lifestyle-card {
+    @apply rounded-2xl p-5 overflow-hidden;
+    background: linear-gradient(135deg, #1A232A 0%, #0E194A 100%);
+    color: white;
+  }
 }
 
 /* Selection */
 ::selection {
-  @apply bg-accent/20 text-primary;
+  @apply bg-blue-100 text-neutral-900;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-neutral-100;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-neutral-300 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-neutral-400;
+}
+
+@keyframes gridMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }

@@ -17,22 +17,17 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  title: 'Atharva Joshi - ML Engineer & Data Scientist',
-  description: 'Production-grade machine learning systems. Specializing in Deep Learning, MLOps, Predictive Maintenance, and Quantitative Finance.',
-  keywords: ['Machine Learning', 'Deep Learning', 'MLOps', 'Data Science', 'Python', 'PyTorch', 'TensorFlow', 'Quantitative Finance'],
+  title: 'Atharva Joshi - Data Scientist & ML Engineer',
+  description: 'MS Data Science student at SUNY Buffalo. Building ML systems for finance and AI evaluation. Open source contributor to Microsoft, Google, Goldman Sachs.',
+  keywords: ['Data Science', 'Machine Learning', 'Quantitative Finance', 'Python', 'Open Source'],
   authors: [{ name: 'Atharva Joshi', url: 'https://github.com/atharvajoshi01' }],
   creator: 'Atharva Joshi',
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    title: 'Atharva Joshi - ML Engineer & Data Scientist',
-    description: 'Building reliable, production-grade machine learning systems',
-    siteName: 'Atharva Joshi Portfolio',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Atharva Joshi - ML Engineer & Data Scientist',
-    description: 'Building reliable, production-grade machine learning systems',
+    title: 'Atharva Joshi - Data Scientist & ML Engineer',
+    description: 'Building ML systems for finance and AI evaluation. Open source contributor.',
+    siteName: 'Atharva Joshi',
   },
   robots: {
     index: true,
@@ -49,9 +44,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="font-sans">
         <Navigation />
-        <main className="min-h-screen">
-          {children}
-        </main>
+        <main>{children}</main>
         <Footer />
       </body>
     </html>
