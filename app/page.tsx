@@ -536,12 +536,12 @@ export default function HomePage() {
           {/* Row 1: Reading | Listening | Watching — 3 equal columns */}
           <motion.div {...fadeUp} className="grid grid-cols-3 gap-4">
             {/* Currently Reading */}
-            <div className="rounded-2xl overflow-hidden relative h-72 flex flex-col items-center justify-end p-4" style={{ background: 'linear-gradient(180deg, #3D1C1C 0%, #1A0A0A 100%)' }}>
+            <div className="rounded-2xl overflow-hidden relative h-72 flex flex-col items-center justify-end p-4" style={{ background: 'linear-gradient(180deg, #2A1A1A 0%, #1A0A0A 100%)' }}>
               <p className="absolute top-4 left-4 text-sm font-semibold text-white z-10">Currently Reading</p>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/media/a-little-life.jpg"
-                alt="A Little Life"
+                src="/images/media/me-before-you.jpg"
+                alt="Me Before You"
                 className="h-56 rounded-lg shadow-2xl object-contain"
               />
             </div>
